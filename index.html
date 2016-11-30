@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>canvas动画-会舞动的树</title>
+	</head>
+	<style>
+		body { 
+		  background: #000000;
+		  background-size: cover;
+			margin: 0;
+		  padding: 0;
+		  overflow: hidden;
+		  width:100%;
+		} 
+		
+	</style>
+	<body>
+		<canvas id='canv'></canvas>
+		
+	</body>
+</html>
+<script>
+	var c = document.getElementById('canv');
+	var $ = c.getContext('2d');
+	var w = c.width = window.innerWidth;
+	var h = c.height = window.innerHeight;
+	var w2 = w* 0.5;
+	var h2 = h * 0.5;
+	var ŭ = 0;
+	var topiary = new branch(90, -30, 0);
+	var cnt = 0;
+	function anim(){
+		cnt++;
+	  ŭ-=.5;
+	  	if (cnt%2) {
+	      draw();
+	      
+	    }
+	 window.requestAnimationFrame(anim);
+	}
+	anim();
+
+	
+	function draw() {
+	    $.save();    //  该方法可以保存当前状态
+	    $.clearRect(0, 0, w, h);
+	    $.translate(w2, h*0.98);   // 树的底部距离上部的高度；
+	    $.rotate(Math.PI * 0.98);   // 树的第一个枝的倾斜程度
+	    topiary.disp($);   // 其中的disp方法是 branch函数中的方法
+	    $.restore();   // 如果需要恢复到已经保存的状态, 只需要调用 CanvasRenderingContext2D.restore() 方法即可.
+	}
+	
+	function branch(len, ang, gen){    // 分支， 树枝，
+	    this.len = len;   // 长度
+	    this.ang = ang;   // 角度
+	    this.gen = gen;  //  general  普通的 大致的 综合的 全体的
+	    // gen 表示的应该是树枝一共有的层数吧   第一层 一枝；  第二层  两枝；  第三层 四枝； 第四层 八枝 以此类推
+	    this.limb = [];  // limb 枝干
+	    this.sway = 0;  // sway 摇摆  倾斜
+	    this.mult = rnd(0.01, 0.1);  // 多  多元  复合
+	    this.spawn = 0;  // 再生  产卵
+	    this.vel =0;  // 速度
+	    
+	    if(gen < 8){
+	    	this.limb.push(new branch(len*rnd(0.8, 0.99),
+	      rnd(0, Math.PI/6), this.gen+1));
+	    	this.limb.push(new branch(len*rnd(0.8, 0.99), 
+	      rnd(0, -Math.PI/6), this.gen+1));
+	    }
+		console.log(this.limb);
+		// disp  方法
+		this.disp = function($){
+	    	  this.sway++;  
+	        $.save();   // 保存当前状态
+	        
+	        this.vel *= 0.9;
+	        var dif = 1-this.spawn;
+	        this.vel += (dif*0.1);
+	        this.spawn += this.vel;   // 产卵 的 速度
+	        
+	        $.strokeStyle = "hsla(" + (ŭ % 360) + ",100%,50%,1)";  // 描边的样式
+			$.alpha = .5;
+	        $.lineWidth = 2;   // 线的宽度
+	        $.beginPath();    // 开启一个新的路径
+	        $.rotate(this.ang + (Math.sin(this.sway*this.mult)*Math.PI/64));  // 旋转
+	        $.moveTo(0, 0);   // 画线 开始的位置
+	        $.lineTo(this.len * this.spawn, 0);   //  画线结束的位置
+	        $.stroke();   // 描线
+	        
+	        $.translate(this.len * this.spawn, 0);  // 水平移动
+	        
+	        if(this.spawn > 0.6){  // 对产卵的速度进行一个判断
+	            for(var i = 0; i < this.limb.length; i++){
+	            	var limb = this.limb[i];
+	                limb.disp($);
+	            }
+	        }
+	        $.restore();  // 恢复到已经保存的状态
+	    };
+	}
+	
+	
+	
+	function rnd(min, max){
+		return Math.random()*(max - min) + min;
+	}
+
+</script>
